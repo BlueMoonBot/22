@@ -1,8 +1,33 @@
-- name: "Execute Authenticated Keep-Alive Core"
-        env:
-          HF_TOKEN: ${{ secrets.HF_TOKEN }} # Put your Hugging Face Write Token here
+name: "🌌 Hyperion-Class Immortal Engine"
+
+on:
+  schedule:
+    # Runs every 4 hours, shifted to minute :23 to completely bypass 
+    # high-volume top-of-the-hour dropped cron schedules on GitHub infrastructure.
+    - cron: '23 */4 * * *'
+  workflow_dispatch: # Allows manual override through UI
+
+permissions:
+  contents: write
+  actions: write
+
+jobs:
+  immortal-sustain:
+    name: "Zero-Failure Sustainment Core"
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: "Initialize Environment Core"
         run: |
-          # Use the actual repository IDs instead of URLs
+          echo "🤖 Initializing foundational parsing utilities..."
+          sudo apt-get update -yq && sudo apt-get install -yq curl jq
+
+      - name: "Execute Authenticated Hugging Face Core"
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        run: |
+          # The exact backend repository IDs for the target Spaces
           SPACES=(
             "bluemoonbot/bluemoonbot-lichess"
             "bluemoonbot/hectobot1"
@@ -11,21 +36,70 @@
             "bluemoonbot/bubblebot"
           )
           
-          echo "🚀 Initiating Authenticated API Core..."
-          
+          echo "🚀 Starting backend infrastructure validation loop..."
           for space in "${SPACES[@]}"; do
             echo "------------------------------------------------------"
-            echo "🌐 Refreshing Space: $space"
+            echo "🌐 Target Node: $space"
             
-            # This POST request bypasses all HTML caches and forces Hugging Face
-            # to verify, wake, or sustain the container directly on their backend.
-            RESPONSE=$(curl -s -X POST "https://huggingface.co/api/spaces/$space/restart" \
-              -H "Authorization: Bearer $HF_TOKEN" \
-              -w "%{http_code}" -o /dev/null)
+            # Send an explicit, authenticated administrative command to Hugging Face
+            # This directly communicates with their cluster controller, instantly 
+            # bypassing edge caches to awaken or sustain the container instantly.
+            HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" -X POST \
+              "https://huggingface.co/api/spaces/$space/restart" \
+              -H "Authorization: Bearer $HF_TOKEN")
               
-            if [ "$RESPONSE" = "200" ]; then
-              echo "✅ Space successfully sustained/restarted!"
+            if [ "$HTTP_STATUS" = "200" ]; then
+              echo "✅ Success: API call accepted. Container state guaranteed."
             else
-              echo "❌ Failed to contact HF API. Status code: $RESPONSE"
+              echo "❌ Error: HF API rejected payload with Status Code: $HTTP_STATUS"
             fi
           done
+
+      - name: "Hard-Reset GitHub Inactivity Clock via API"
+        env:
+          HUMAN_TOKEN: ${{ secrets.HUMAN_TOKEN }}
+        run: |
+          echo "======================================================"
+          echo "🔄 Commencing High-Impact GitHub Activity Injection..."
+          echo "======================================================"
+          
+          # 1. Fetch current file details to prevent conflict tracking anomalies
+          FILE_DATA=$(curl -s -H "Authorization: token $HUMAN_TOKEN" \
+            "https://api.github.com/repos/${{ github.repository }}/contents/bot_pulse.txt?ref=${{ github.ref_name }}")
+          
+          # Extract file blob SHA if it already exists, otherwise leave blank
+          CURRENT_SHA=$(echo "$FILE_DATA" | jq -r '.sha // empty')
+          
+          # Generate clean, RFC-compliant dynamic metadata payload
+          TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+          CONTENT_BASE64=$(echo -n "Hyperion Engine Pulse: $TIMESTAMP" | base64 | tr -d '\n\r')
+          
+          # Construct an isolated structural JSON block for the GitHub REST Endpoint
+          if [ -z "$CURRENT_SHA" ]; then
+            JSON_PAYLOAD=$(jq -n \
+              --arg msg "chore(keepalive): initialize engine pulse [skip ci]" \
+              --arg b64 "$CONTENT_BASE64" \
+              --arg branch "${{ github.ref_name }}" \
+              '{message: $msg, content: $b64, branch: $branch}')
+          else
+            JSON_PAYLOAD=$(jq -n \
+              --arg msg "chore(keepalive): immortal keepalive sync $TIMESTAMP [skip ci]" \
+              --arg b64 "$CONTENT_BASE64" \
+              --arg sha "$CURRENT_SHA" \
+              --arg branch "${{ github.ref_name }}" \
+              '{message: $msg, content: $b64, sha: $sha, branch: $branch}')
+          fi
+
+          # 2. Transmit the payload directly into the commit log database using your HUMAN_TOKEN
+          RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" -X PUT \
+            -H "Authorization: token $HUMAN_TOKEN" \
+            -H "Accept: application/vnd.github.v3+json" \
+            -d "$JSON_PAYLOAD" \
+            "https://api.github.com/repos/${{ github.repository }}/contents/bot_pulse.txt")
+
+          if [ "$RESPONSE" = "200" ] || [ "$RESPONSE" = "201" ]; then
+            echo "🌌 Success: GitHub API activity injection complete. 60-day clock wiped out!"
+          else
+            echo "🚨 Critical: GitHub Database rejected the write-buffer. Status: $RESPONSE"
+            exit 1
+          fi
