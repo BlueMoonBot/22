@@ -1,0 +1,31 @@
+- name: "Execute Authenticated Keep-Alive Core"
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }} # Put your Hugging Face Write Token here
+        run: |
+          # Use the actual repository IDs instead of URLs
+          SPACES=(
+            "bluemoonbot/bluemoonbot-lichess"
+            "bluemoonbot/hectobot1"
+            "bluemoonbot/fluffybot"
+            "bluemoonbot/bot"
+            "bluemoonbot/bubblebot"
+          )
+          
+          echo "🚀 Initiating Authenticated API Core..."
+          
+          for space in "${SPACES[@]}"; do
+            echo "------------------------------------------------------"
+            echo "🌐 Refreshing Space: $space"
+            
+            # This POST request bypasses all HTML caches and forces Hugging Face
+            # to verify, wake, or sustain the container directly on their backend.
+            RESPONSE=$(curl -s -X POST "https://huggingface.co/api/spaces/$space/restart" \
+              -H "Authorization: Bearer $HF_TOKEN" \
+              -w "%{http_code}" -o /dev/null)
+              
+            if [ "$RESPONSE" = "200" ]; then
+              echo "✅ Space successfully sustained/restarted!"
+            else
+              echo "❌ Failed to contact HF API. Status code: $RESPONSE"
+            fi
+          done
